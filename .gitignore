@@ -1,2 +1,3 @@
 venv/
 data/vehicles.csv
+src/__pycache__
