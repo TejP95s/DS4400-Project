@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import KFold, cross_val_score
 import numpy as np
 import time
+import pandas as pd
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
 
 
 def cross_validate_model(model, X, y, k=5):
@@ -76,6 +80,9 @@ def main():
     best_model.fit(X_train, y_train)
     plot_predicted_vs_actual(best_model, X_test, y_test, best_model_name)
     plot_residuals(best_model, X_test, y_test, best_model_name)
+    plot_feature_importance(best_model, X_train)
+    plot_residuals_vs_predicted(best_model, X_test, y_test, best_model_name)
+    save_results_table(all_results)
     
 
 def plot_performance_vs_time(all_results):
@@ -102,6 +109,7 @@ def plot_performance_vs_time(all_results):
     ax1.tick_params(axis="x", rotation=45)
     fig.tight_layout()
     fig.legend(loc="upper right", bbox_to_anchor=(1,1))
+    plt.savefig("graphs/performance_vs_training_time.png", dpi=300, bbox_inches="tight")
     plt.show()
 
 def plot_predicted_vs_actual(model, X_test, y_test, model_name):
@@ -121,6 +129,7 @@ def plot_predicted_vs_actual(model, X_test, y_test, model_name):
     plt.title(f"Predicted vs Actual ({model_name})")
 
     plt.tight_layout()
+    plt.savefig(f"graphs/predicted_vs_actual_{model_name}.png", dpi=300, bbox_inches="tight")
     plt.show()
 
 def plot_residuals(model, X_test, y_test, model_name):
@@ -136,9 +145,52 @@ def plot_residuals(model, X_test, y_test, model_name):
     plt.title(f"Residual Distribution ({model_name})")
 
     plt.tight_layout()
+    plt.savefig(f"graphs/residual_distribution_{model_name}.png", dpi=300, bbox_inches="tight")
     plt.show()
+
+def plot_residuals_vs_predicted(model, X_test, y_test, model_name):
+    preds = model.predict(X_test)
+    residuals = y_test - preds
+
+    plt.figure(figsize=(8,5))
+    plt.scatter(preds, residuals, alpha=0.4)
+    plt.axhline(0, linestyle="--")
+    plt.xlabel("Predicted Price")
+    plt.ylabel("Residual")
+    plt.title(f"Residuals vs Predicted ({model_name})")
+    plt.tight_layout()
+    plt.savefig(f"graphs/residuals_vs_predicted_{model_name}.png", dpi=300, bbox_inches="tight")
+    plt.show()
+
+def plot_feature_importance(model, X, top_n=15):
+
+    if not hasattr(model, "feature_importances_"):
+        print("Model does not support feature importances.")
+        return
+
+    importances = pd.Series(model.feature_importances_, index=X.columns)
+    importances = importances.sort_values(ascending=False).head(top_n)
+
+    plt.figure(figsize=(10, 5))
+    importances.plot(kind="bar")
+    plt.title(f"Top {top_n} Feature Importances")
+    plt.xlabel("Feature")
+    plt.ylabel("Importance")
+    plt.tight_layout()
+    plt.savefig(f"graphs/feature_importance.png", dpi=300, bbox_inches="tight")
+    plt.show()
+
+def save_results_table(all_results, filename="results/model_results.csv"):
+
+    os.makedirs("results", exist_ok=True)
+
+    df_results = pd.DataFrame(all_results).T
+    df_results.to_csv(filename, index=True)
+    print(f"Saved results to {filename}")
+    
+
 if __name__ == "__main__":
-    main()
+         main()
 
 ''' Latest results
 Ridge
